@@ -93,52 +93,52 @@ DARE-LQR：在当前前馈工作点附近抑制横向误差和航向误差
 
 控制器接收的局部控制路径应位于车辆局部坐标系中，车辆当前 `base_link` 位于：
 
-$$
+```math
 (x_r,y_r,\psi_r)=(0,0,0)
-$$
+```
 
 普通路径跟踪使用路径点的几何位置计算线段方向，不依赖每个路径点的四元数。终端存在外部目标时，终点航向使用目标位姿的四元数；否则使用路径末端向前回看一段距离得到的终端切线方向。
 
 默认终端切线回看距离为：
 
-$$
+```math
 D_{\mathrm{heading}}=0.65\ \mathrm{m}
-$$
+```
 
 ### 3.2 正倒车统一运动坐标系
 
 定义运动方向符号：
 
-$$
+```math
 \sigma=
 \begin{cases}
 +1, & \text{正向行驶}\\
 -1, & \text{倒向行驶}
 \end{cases}
-$$
+```
 
 局部路径点从 `base_link` 坐标系转换到统一运动坐标系：
 
-$$
+```math
 x_m=\sigma x_b
-$$
+```
 
-$$
+```math
 y_m=\sigma y_b
-$$
+```
 
 经过该变换后，无论正向还是倒向行驶，车辆在运动坐标系中都等价为沿正 $x$ 方向前进，因此最近线段投影、路径进度、横向误差和航向误差可以使用同一套算法。
 
 倒车外部终点航向同时补偿 $\pi$：
 
-$$
+```math
 e_{\psi,t}^{m}
 =
 \operatorname{wrap}
 \left(
 \psi_t-\psi_b+\pi
 \right)
-$$
+```
 
 ### 3.3 最近线段投影
 
@@ -156,15 +156,15 @@ $$
 
 误差在进入控制器前经过死区处理：
 
-$$
+```math
 |e_y|<0.0015\ \mathrm{m}
 \Rightarrow e_y=0
-$$
+```
 
-$$
+```math
 |e_\psi|<0.0020\ \mathrm{rad}
 \Rightarrow e_\psi=0
-$$
+```
 
 ### 3.4 `base_link` 参考点与定位外参
 
@@ -201,15 +201,15 @@ $$
 
 当前 Ranger Mini V3 默认参数为：
 
-$$
+```math
 L=0.494\ \mathrm{m},\qquad W=0.364\ \mathrm{m}
-$$
+```
 
 ### 4.2 内轮转角与中央转角
 
 内轮转角转换为中央转角：
 
-$$
+```math
 \phi
 =
 \operatorname{atan2}
@@ -217,13 +217,13 @@ $$
 L\sin|\delta_{\mathrm{in}}|,
 L\cos|\delta_{\mathrm{in}}|+W\sin|\delta_{\mathrm{in}}|
 \right)
-$$
+```
 
 最终符号与 $\delta_{\mathrm{in}}$ 保持一致。
 
 中央转角转换为内轮转角：
 
-$$
+```math
 \delta_{\mathrm{in}}
 =
 \operatorname{atan2}
@@ -231,7 +231,7 @@ $$
 L\sin|\phi|,
 L\cos|\phi|-W\sin|\phi|
 \right)
-$$
+```
 
 最终符号与 $\phi$ 保持一致。
 
@@ -239,39 +239,39 @@ $$
 
 当前实现使用以下双阿克曼等效关系：
 
-$$
+```math
 \kappa
 =
 \frac{2\tan\phi}{L}
-$$
+```
 
 因此，路径曲率对应的中央转角为：
 
-$$
+```math
 \phi
 =
 \arctan
 \left(
 \frac{L\kappa}{2}
 \right)
-$$
+```
 
 ### 4.4 转向和最小转弯半径约束
 
 首先根据最小转弯半径和安全余量计算允许的内轮转角：
 
-$$
+```math
 \delta_{\mathrm{radius}}
 =
 \arctan
 \left(
 \frac{L/2}{R_{\min}+\Delta R}
 \right)
-$$
+```
 
 实际可用内轮转角为：
 
-$$
+```math
 \delta_{\mathrm{usable}}
 =
 \min
@@ -279,11 +279,11 @@ $$
 \delta_{\max},
 \delta_{\mathrm{radius}}
 \right)
-$$
+```
 
 再由 $\delta_{\mathrm{usable}}$ 换算得到最大中央转角。最大曲率同时受到中央转角和最小转弯半径限制：
 
-$$
+```math
 \kappa_{\max}
 =
 \min
@@ -291,7 +291,7 @@ $$
 \left|\frac{2\tan\phi_{\max}}{L}\right|,
 \frac{1}{R_{\min}}
 \right)
-$$
+```
 
 按照默认参数，初始化后约有：
 
@@ -307,7 +307,7 @@ $$
 
 中央转角先转换为内轮转角，再计算角速度指令：
 
-$$
+```math
 \omega_{\mathrm{cmd}}
 =
 \operatorname{clip}
@@ -316,7 +316,7 @@ $$
 -\omega_{\max},
 \omega_{\max}
 \right)
-$$
+```
 
 这里使用 $|v|$ 而不是带符号线速度。该接口设计用于 Ranger 底盘或适配器通过 `angular.z / |linear.x|` 还原转向需求，倒车方向由 `linear.x` 的符号单独表达。因此，不应直接将该 `angular.z` 解释为普通单车模型中的 $v\kappa$。
 
@@ -326,7 +326,7 @@ $$
 
 状态向量定义为：
 
-$$
+```math
 X_k=
 \begin{bmatrix}
 e_y &
@@ -334,7 +334,7 @@ e_y &
 e_\psi &
 \dot e_\psi
 \end{bmatrix}^{T}
-$$
+```
 
 其中：
 
@@ -345,25 +345,25 @@ $$
 
 进入 LQR 前，位置和航向误差分别限幅为：
 
-$$
+```math
 e_y\in[-0.25,0.25]\ \mathrm{m}
-$$
+```
 
-$$
+```math
 e_\psi\in[-0.70,0.70]\ \mathrm{rad}
-$$
+```
 
 ### 5.2 控制输入
 
 LQR 控制输入是相对于路径前馈中央转角的反馈修正量：
 
-$$
+```math
 u_k=\Delta\phi_k
-$$
+```
 
 它不是完整的中央转角指令。最终中央转角为：
 
-$$
+```math
 \phi_{\mathrm{cmd}}
 =
 \phi_{\mathrm{ff}}
@@ -371,7 +371,7 @@ $$
 \Delta\phi_{\mathrm{LQR}}
 +
 \Delta\phi_{\mathrm{reverse}}
-$$
+```
 
 其中：
 
@@ -383,17 +383,17 @@ $$
 
 控制器每周期重新构造：
 
-$$
+```math
 X_{k+1}
 =
 A(v,\Delta t)X_k
 +
 B(v,\phi_{\mathrm{ff}})\Delta\phi_k
-$$
+```
 
 状态矩阵为：
 
-$$
+```math
 A=
 \begin{bmatrix}
 1 & \Delta t & 0 & 0\\
@@ -401,11 +401,11 @@ A=
 0 & 0 & 1 & \Delta t\\
 0 & 0 & 0 & 0
 \end{bmatrix}
-$$
+```
 
 输入矩阵为：
 
-$$
+```math
 B=
 \begin{bmatrix}
 0\\
@@ -413,7 +413,7 @@ B=
 0\\
 -\dfrac{2v\cos\phi_{\mathrm{ff}}}{L}
 \end{bmatrix}
-$$
+```
 
 其中：
 
@@ -426,7 +426,7 @@ $$
 
 为避免低速时输入矩阵 $B$ 退化，模型速度采用：
 
-$$
+```math
 v_{\mathrm{model}}
 =
 \max
@@ -434,19 +434,19 @@ v_{\mathrm{model}}
 |v_{\mathrm{cmd}}|,
 \max(v_{\mathrm{terminal,min}},0.05)
 \right)
-$$
+```
 
 默认：
 
-$$
+```math
 v_{\mathrm{terminal,min}}=0.01\ \mathrm{m/s}
-$$
+```
 
 因此实际 DARE 模型最低使用：
 
-$$
+```math
 v_{\mathrm{model,min}}=0.05\ \mathrm{m/s}
-$$
+```
 
 该下限只用于构造 $A$、$B$ 和求解 $K$，实际发布速度仍可低于 $0.05\ \mathrm{m/s}$，也可以为零。
 
@@ -456,36 +456,36 @@ $$
 
 横向误差变化率的模型估计为：
 
-$$
+```math
 \dot e_{y,\mathrm{model}}
 =
 |v|\sin e_\psi
-$$
+```
 
 航向误差变化率的模型估计为：
 
-$$
+```math
 \dot e_{\psi,\mathrm{model}}
 =
 |v|
 \left(
 \kappa_{\mathrm{ff}}-\kappa_{\mathrm{prev}}
 \right)
-$$
+```
 
 存在历史误差时，同时计算有限差分：
 
-$$
+```math
 \dot e_{y,\mathrm{meas}}
 =
 \frac{e_{y,k}-e_{y,k-1}}{\Delta t}
-$$
+```
 
-$$
+```math
 \dot e_{\psi,\mathrm{meas}}
 =
 \frac{\operatorname{wrap}(e_{\psi,k}-e_{\psi,k-1})}{\Delta t}
-$$
+```
 
 测量变化率的融合比例为：
 
@@ -496,29 +496,29 @@ $$
 
 随后使用一阶低通滤波：
 
-$$
+```math
 \dot e_k^{f}
 =
 \alpha_r\dot e_k^{\mathrm{sample}}
 +
 (1-\alpha_r)\dot e_{k-1}^{f}
-$$
+```
 
 默认：
 
-$$
+```math
 \alpha_r=0.25
-$$
+```
 
 最终变化率限幅为：
 
-$$
+```math
 \dot e_y\in[-1,1]\ \mathrm{m/s}
-$$
+```
 
-$$
+```math
 \dot e_\psi\in[-2,2]\ \mathrm{rad/s}
-$$
+```
 
 这种构造降低了定位噪声直接差分导致的转向抖动，同时保留了实际误差变化趋势。
 
@@ -526,7 +526,7 @@ $$
 
 无限时域离散 LQR 代价函数为：
 
-$$
+```math
 J
 =
 \sum_{k=0}^{\infty}
@@ -535,11 +535,11 @@ X_k^{T}QX_k
 +
 u_k^{T}Ru_k
 \right)
-$$
+```
 
 默认状态权重为：
 
-$$
+```math
 Q=
 \operatorname{diag}
 \left(
@@ -548,13 +548,13 @@ Q=
 10.0,
 0.25
 \right)
-$$
+```
 
 控制权重为：
 
-$$
+```math
 R=4.2
-$$
+```
 
 其中，$Q$ 只包含四个状态代价，$v$ 和 $\Delta t$ 位于 $A$、$B$ 中，不属于 $Q$。
 
@@ -562,26 +562,26 @@ $$
 
 离散代数黎卡提方程为：
 
-$$
+```math
 P_{\mathrm{next}}
 =
 Q+A^{T}PA
 -A^{T}PB
 \left(R+B^{T}PB\right)^{-1}
 B^{T}PA
-$$
+```
 
 由于系统只有一个控制输入：
 
-$$
+```math
 B\in\mathbb{R}^{4\times1}
-$$
+```
 
 所以：
 
-$$
+```math
 S=R+B^{T}PB
-$$
+```
 
 为标量。
 
@@ -598,32 +598,32 @@ AtPA = A^T P A
 
 迭代最多执行 `160` 次，当矩阵元素最大变化量满足：
 
-$$
+```math
 \max|P_{\mathrm{next}}-P|<10^{-10}
-$$
+```
 
 时提前结束。
 
 最终反馈增益为：
 
-$$
+```math
 K
 =
 \left(R+B^{T}PB\right)^{-1}B^{T}PA
-$$
+```
 
-$$
+```math
 K=
 \begin{bmatrix}
 K_0 & K_1 & K_2 & K_3
 \end{bmatrix}
-$$
+```
 
 ### 5.8 反馈控制律与分段增益
 
 基础反馈量为：
 
-$$
+```math
 \Delta\phi_{\mathrm{LQR}}
 =
 -k_s
@@ -633,7 +633,7 @@ K_0e_y
 +K_2e_\psi
 +K_3\dot e_\psi
 \right)
-$$
+```
 
 其中 $k_s$ 由以下参数共同决定：
 
@@ -645,14 +645,14 @@ curve_feedback_scale
 
 当前路径满足：
 
-$$
+```math
 \max
 \left(
 |\kappa_{\mathrm{now}}|,
 |\kappa_{\mathrm{ff}}|
 \right)
 \leq0.025\ \mathrm{m}^{-1}
-$$
+```
 
 时被视为直线参考。
 
@@ -665,10 +665,10 @@ $$
 
 直线且不处于路径捕获状态时，LQR 反馈中央转角进一步限制在：
 
-$$
+```math
 |\Delta\phi_{\mathrm{LQR}}|
 \leq0.085\ \mathrm{rad}
-$$
+```
 
 路径捕获状态下不使用直线或曲线附加缩放，而保留基础 `lqr_feedback_scale`，以获得足够的回归能力。
 
@@ -678,24 +678,24 @@ $$
 
 控制器以路径进度 $s$ 为中心，在默认 $0.18\ \mathrm{m}$ 曲率窗口内获取三个弧长采样点，通过三点外接圆计算有符号曲率：
 
-$$
+```math
 \kappa
 =
 \frac{2\left[(p_1-p_0)\times(p_2-p_0)\right]}
 {|p_1-p_0|\,|p_2-p_1|\,|p_2-p_0|}
-$$
+```
 
 曲率最终限制在：
 
-$$
+```math
 \kappa\in[-\kappa_{\max},\kappa_{\max}]
-$$
+```
 
 ### 6.2 短预瞄距离
 
 短预瞄距离随当前允许速度变化：
 
-$$
+```math
 D_{\mathrm{short}}
 =
 \operatorname{clip}
@@ -704,7 +704,7 @@ D_{\mathrm{short}}
 0.08,
 0.38
 \right)
-$$
+```
 
 单位为米。
 
@@ -712,36 +712,36 @@ $$
 
 控制器在区间：
 
-$$
+```math
 [s,s+D_{\mathrm{short}}]
-$$
+```
 
 内使用 `7` 个未来采样点。第 $i$ 个采样比例为：
 
-$$
+```math
 r_i=\frac{i}{N},\qquad i=1,\ldots,N
-$$
+```
 
 采样权重为：
 
-$$
+```math
 w_i=1-0.45r_i
-$$
+```
 
 越靠近车辆的未来曲率权重越大。未来平均曲率为：
 
-$$
+```math
 \bar\kappa_{\mathrm{future}}
 =
 \frac{\sum_{i=1}^{N}w_i\kappa(s+r_iD_{\mathrm{short}})}
 {\sum_{i=1}^{N}w_i}
-$$
+```
 
 ### 6.4 平滑激活与融合
 
 定义激活强度：
 
-$$
+```math
 \kappa_{\mathrm{act}}
 =
 \max
@@ -749,20 +749,20 @@ $$
 |\kappa_{\mathrm{now}}|,
 |\bar\kappa_{\mathrm{future}}|
 \right)
-$$
+```
 
 当：
 
-$$
+```math
 \kappa_{\mathrm{act}}
 \leq0.030\ \mathrm{m}^{-1}
-$$
+```
 
 时，短预瞄不参与融合，直接使用当前曲率。
 
 超过阈值后，激活比例为：
 
-$$
+```math
 \gamma
 =
 \operatorname{clip}
@@ -775,25 +775,25 @@ $$
 0,
 1
 \right)
-$$
+```
 
 有效融合比例为：
 
-$$
+```math
 \beta_{\mathrm{eff}}
 =
 \beta\gamma
-$$
+```
 
 默认 $\beta=0.50$。最终短预瞄曲率为：
 
-$$
+```math
 \kappa_{\mathrm{preview}}
 =
 (1-\beta_{\mathrm{eff}})\kappa_{\mathrm{now}}
 +
 \beta_{\mathrm{eff}}\bar\kappa_{\mathrm{future}}
-$$
+```
 
 该渐进激活机制可避免曲率刚超过阈值时发生前馈突变。
 
@@ -801,28 +801,28 @@ $$
 
 前馈曲率为：
 
-$$
+```math
 \kappa_{\mathrm{ff}}
 =
 k_{\mathrm{ff}}\kappa_{\mathrm{preview}}
-$$
+```
 
 默认：
 
-$$
+```math
 k_{\mathrm{ff}}=1.0
-$$
+```
 
 对应中央转角：
 
-$$
+```math
 \phi_{\mathrm{ff}}
 =
 \arctan
 \left(
 \frac{L\kappa_{\mathrm{ff}}}{2}
 \right)
-$$
+```
 
 短预瞄对控制器具有两层作用：
 
@@ -833,7 +833,7 @@ $$
 
 普通前瞻点与短预瞄曲率不是同一个量。普通路径跟踪前瞻距离为：
 
-$$
+```math
 D_{\mathrm{track}}
 =
 \operatorname{clip}
@@ -842,7 +842,7 @@ D_{\mathrm{track}}
 0.30,
 0.85
 \right)
-$$
+```
 
 该前瞻点主要用于参考路径准备和可视化，最近线段误差仍由车辆原点到路径的最近投影计算。
 
@@ -852,7 +852,7 @@ $$
 
 长预瞄只用于速度规划：
 
-$$
+```math
 D_{\mathrm{long}}
 =
 \operatorname{clip}
@@ -861,7 +861,7 @@ D_{\mathrm{long}}
 0.90,
 2.50
 \right)
-$$
+```
 
 单位为米。
 
@@ -875,15 +875,15 @@ $$
 
 默认弯道激活阈值为：
 
-$$
+```math
 \kappa_{\mathrm{long,th}}=0.050\ \mathrm{m}^{-1}
-$$
+```
 
 ### 7.2 弯道速度上限
 
 弯道目标速度为：
 
-$$
+```math
 v_{\mathrm{curve}}
 =
 \operatorname{clip}
@@ -895,7 +895,7 @@ v_{\mathrm{curve}}
 v_{\mathrm{curve,min}},
 v_{\max}
 \right)
-$$
+```
 
 默认：
 
@@ -906,7 +906,7 @@ $$
 
 扣除安全距离后的有效制动距离为：
 
-$$
+```math
 d_{\mathrm{brake}}
 =
 \max
@@ -914,26 +914,26 @@ d_{\mathrm{brake}}
 0,
 d_{\mathrm{entry}}-d_{\mathrm{safety}}
 \right)
-$$
+```
 
 当前允许速度为：
 
-$$
+```math
 v_{\mathrm{anticipation}}
 =
 \sqrt{
  v_{\mathrm{curve}}^2
  +2a_{\mathrm{dec}}d_{\mathrm{brake}}
 }
-$$
+```
 
 并限制在：
 
-$$
+```math
 v_{\mathrm{anticipation}}
 \in
 [v_{\mathrm{curve,min}},v_{\max}]
-$$
+```
 
 未发现弯道时，长预瞄速度上限返回 $v_{\max}$。
 
@@ -941,7 +941,7 @@ $$
 
 控制器额外构造：
 
-$$
+```math
 \kappa_{\mathrm{estimate}}
 =
 \operatorname{clip}
@@ -952,13 +952,13 @@ $$
 -\kappa_{\max},
 \kappa_{\max}
 \right)
-$$
+```
 
 默认：
 
-$$
+```math
 k_y=0.36,\qquad k_\psi=0.66
-$$
+```
 
 该曲率只用于估计当前转向需求并进行速度限制，实际转向仍由前馈与四状态 DARE-LQR 产生。
 
@@ -966,29 +966,29 @@ $$
 
 基础目标速度为：
 
-$$
+```math
 v_0
 =
 \min
 \left(
 v_{\mathrm{target}},v_{\max}
 \right)
-$$
+```
 
 曲率限速为：
 
-$$
+```math
 v_{\mathrm{curvature}}
 =
 \sqrt{
 \frac{a_{y,\max}}
 {|\kappa_{\mathrm{estimate}}|}
 }
-$$
+```
 
 跟踪误差速度比例为：
 
-$$
+```math
 f_e
 =
 \operatorname{clip}
@@ -998,19 +998,19 @@ f_e
 0.25,
 1.0
 \right)
-$$
+```
 
 因此误差限速为：
 
-$$
+```math
 v_{\mathrm{error}}=f_e v
-$$
+```
 
 默认：
 
-$$
+```math
 k_{v,y}=0.55,\qquad k_{v,\psi}=0.38
-$$
+```
 
 完整速度还会受到以下约束：
 
@@ -1023,14 +1023,14 @@ $$
 
 源码中还存在一个固定的转向需求限速：
 
-$$
+```math
 v_{\mathrm{steering}}
 =
 \sqrt{
 \frac{0.35}
 {|\kappa_{\mathrm{estimate}}|}
 }
-$$
+```
 
 该常数 `0.35` 当前未暴露为 YAML 参数。
 
@@ -1060,29 +1060,29 @@ $$
 
 首次跟踪时，满足以下任一条件进入路径捕获：
 
-$$
+```math
 |e_y|\geq0.080\ \mathrm{m}
-$$
+```
 
 或：
 
-$$
+```math
 |e_\psi|\geq0.220\ \mathrm{rad}
-$$
+```
 
 ### 8.2 跟踪后的重新捕获
 
 车辆已经稳定跟踪过路径后，只有误差增大到以下阈值才重新进入捕获：
 
-$$
+```math
 |e_y|\geq0.250\ \mathrm{m}
-$$
+```
 
 或：
 
-$$
+```math
 |e_\psi|\geq0.550\ \mathrm{rad}
-$$
+```
 
 这避免正常的小幅误差波动频繁触发低速模式。
 
@@ -1090,15 +1090,15 @@ $$
 
 误差连续 `3` 个控制周期满足：
 
-$$
+```math
 |e_y|\leq0.025\ \mathrm{m}
-$$
+```
 
 且：
 
-$$
+```math
 |e_\psi|\leq0.080\ \mathrm{rad}
-$$
+```
 
 后退出捕获状态。
 
@@ -1144,58 +1144,58 @@ parking_adjustment_enable: true
 
 终点纵向误差为：
 
-$$
+```math
 e_s
 =
 \cos\psi_t\,x_t
 +
 \sin\psi_t\,y_t
-$$
+```
 
 终点横向误差为：
 
-$$
+```math
 e_{t,y}
 =
 -\sin\psi_t\,x_t
 +
 \cos\psi_t\,y_t
-$$
+```
 
 终点欧氏距离为：
 
-$$
+```math
 d_t=\sqrt{x_t^2+y_t^2}
-$$
+```
 
 ### 9.3 终点减速
 
 当：
 
-$$
+```math
 d_t<2.00\ \mathrm{m}
-$$
+```
 
 时进入终点减速区域。
 
 纵向速度上限为：
 
-$$
+```math
 v_{\mathrm{terminal}}
 =k_s e_s
-$$
+```
 
 默认：
 
-$$
+```math
 k_s=0.50
-$$
+```
 
 若：
 
-$$
+```math
 e_s\leq0
-$$
+```
 
 说明当前 `base_link` 已经到达或越过终端切平面。继续保持当前挡位只会增大纵向误差，因此控制器直接输出零速度，不会为了追逐剩余横向误差而继续越过终点。
 
@@ -1203,13 +1203,13 @@ $$
 
 终点附近的修正速度下限由横向误差和距离误差共同计算：
 
-$$
+```math
 v_{\mathrm{floor}}
 =
 v_{\mathrm{terminal,min}}
 +k_{f,y}\max(0,|e_{t,y}|-e_{t,y}^{\mathrm{tol}})
 +k_{f,d}\max(0,d_t-d_t^{\mathrm{tol}})
-$$
+```
 
 默认：
 
@@ -1222,7 +1222,7 @@ terminal_correction_speed_max:             0.040 m/s
 
 修正速度下限不能覆盖纵向制动律，实际使用：
 
-$$
+```math
 v_{\mathrm{safe,floor}}
 =
 \min
@@ -1230,7 +1230,7 @@ v_{\mathrm{safe,floor}}
 v_{\mathrm{floor}},
 v_{\mathrm{terminal}}
 \right)
-$$
+```
 
 该限制用于避免车辆在最后几厘米因横向误差仍然存在而被强制保持过高速度，从而越过目标点。
 
@@ -1238,17 +1238,17 @@ $$
 
 当前 YAML 默认停车窗口为：
 
-$$
+```math
 d_t\leq0.01\ \mathrm{m}
-$$
+```
 
-$$
+```math
 |e_s|\leq0.01\ \mathrm{m}
-$$
+```
 
-$$
+```math
 |e_{t,y}|\leq0.01\ \mathrm{m}
-$$
+```
 
 三个条件同时满足时，立即输出零速度并开始停车确认。
 
@@ -1276,7 +1276,7 @@ $$
 
 倒车修正基于终点横向误差超出死区的部分：
 
-$$
+```math
 e_{\mathrm{excess}}
 =
 \max
@@ -1284,18 +1284,18 @@ e_{\mathrm{excess}}
 0,
 |e_{t,y}|-0.004
 \right)
-$$
+```
 
 基础修正为：
 
-$$
+```math
 \Delta\phi_{\mathrm{reverse}}
 =
 \operatorname{sign}(e_{t,y})
 \,k_r e_{\mathrm{excess}}
 \,b_{\mathrm{entry}}
 \,b_{\mathrm{fade}}
-$$
+```
 
 默认：
 
@@ -1311,13 +1311,13 @@ $$
 
 正向终点没有对应的额外终点转向项，始终保持：
 
-$$
+```math
 \phi_{\mathrm{forward}}
 =
 \phi_{\mathrm{ff}}
 +
 \Delta\phi_{\mathrm{LQR}}
-$$
+```
 
 ## 10. 曲率与速度指令平滑
 
@@ -1327,21 +1327,21 @@ $$
 
 基础最大曲率变化量为：
 
-$$
+```math
 \Delta\kappa_{\max}
 =
 \dot\kappa_{\max}\Delta t
-$$
+```
 
 默认：
 
-$$
+```math
 \dot\kappa_{\max}=3.00\ \mathrm{m}^{-1}\mathrm{s}^{-1}
-$$
+```
 
 处理后的曲率为：
 
-$$
+```math
 \kappa_{\mathrm{rate}}
 =
 \kappa_{k-1}
@@ -1352,15 +1352,15 @@ $$
 -\Delta\kappa_{\max},
 \Delta\kappa_{\max}
 \right)
-$$
+```
 
-$$
+```math
 \kappa_k
 =
 \alpha_\kappa\kappa_{\mathrm{rate}}
 +
 (1-\alpha_\kappa)\kappa_{k-1}
-$$
+```
 
 当前实现中，$\alpha_\kappa$ 越大，当前目标占比越高，响应越快。
 
@@ -1381,13 +1381,13 @@ $$
 
 线速度经过一阶平滑：
 
-$$
+```math
 v_k
 =
 \alpha_v v_{\mathrm{target}}
 +
 (1-\alpha_v)v_{k-1}
-$$
+```
 
 默认：
 
@@ -1400,34 +1400,34 @@ $$
 
 加速阶段还受到最大线加速度约束：
 
-$$
+```math
 |v_k-v_{k-1}|
 \leq
  a_{\max}\Delta t
-$$
+```
 
 默认：
 
-$$
+```math
 a_{\max}=0.80\ \mathrm{m/s^2}
-$$
+```
 
 ### 10.3 保持转向比值
 
 Ranger 底盘根据：
 
-$$
+```math
 \frac{\omega}{|v|}
-$$
+```
 
 解释转向需求。因此线速度平滑后，控制器不独立滤波角速度，而是保持原始角速度与速度大小的比值：
 
-$$
+```math
 \omega_{\mathrm{smoothed}}
 =
 |v_{\mathrm{smoothed}}|
 \frac{\omega_{\mathrm{raw}}}{|v_{\mathrm{raw}}|}
-$$
+```
 
 这样可避免只平滑线速度后改变等效转向角。
 
