@@ -1,0 +1,8 @@
+<library path="lqr">
+  <class
+    name="controller/lqr"
+    type="lqr::LqrController"
+    base_class_type="nav_core::ControllerPlugin">
+    <description>Dual-Ackermann four-state DARE-LQR path tracking controller.</description>
+  </class>
+</library>

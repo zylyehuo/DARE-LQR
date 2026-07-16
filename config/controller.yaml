@@ -1,0 +1,167 @@
+/**:
+  ros__parameters:
+    plugin_name: "lqr"
+    plugins:
+      controller: "controller/lqr"
+
+    # --------------------------------------------------------------------------
+    # Vehicle speed and dual-Ackermann geometry
+    # --------------------------------------------------------------------------
+    target_linear_velocity: 1.00
+    min_linear_velocity: 0.06
+    max_linear_velocity: 1.00
+    max_angular_velocity: 1.20
+    max_linear_acceleration: 0.80
+
+    wheel_base: 0.494
+    track_width: 0.364
+    max_steering_angle: 0.698
+    min_turning_radius: 0.59
+    dual_ackermann_mode_radius_margin: 0.03
+
+    # --------------------------------------------------------------------------
+    # Four-state DARE-LQR
+    # State: [e_y, e_y_dot, e_psi, e_psi_dot]
+    # Input: central steering correction around the curvature feedforward angle.
+    # --------------------------------------------------------------------------
+    lqr_q_lateral: 12.0
+    lqr_q_lateral_rate: 0.30
+    lqr_q_heading: 10.0
+    lqr_q_heading_rate: 0.25
+    lqr_r_steering: 4.2
+    lqr_feedback_scale: 1.00
+    lqr_error_rate_filter_alpha: 0.25
+
+    straight_reference_curvature_threshold: 0.025
+    straight_feedback_scale: 0.55
+    curve_feedback_scale: 1.10
+    straight_feedback_max_central_steering: 0.085
+
+    lateral_error_limit: 0.25
+    heading_error_limit: 0.70
+    lateral_error_deadband: 0.0015
+    heading_error_deadband: 0.0020
+
+    # --------------------------------------------------------------------------
+    # Curvature feedforward and short steering preview
+    # D_short = clamp(min + speed_gain * |v|, min, max)
+    # --------------------------------------------------------------------------
+    path_curvature_feedforward_gain: 1.00
+    path_curvature_window_distance: 0.18
+    curve_preview_enable: true
+    curve_preview_min_distance: 0.08
+    curve_preview_speed_gain: 0.25
+    curve_preview_max_distance: 0.38
+    curve_preview_samples: 7
+    curve_preview_blend: 0.50
+    curve_preview_activation_curvature: 0.030
+
+    # --------------------------------------------------------------------------
+    # Long preview used only for speed planning
+    # D_long = clamp(min + speed_gain * |v|, min, max)
+    # --------------------------------------------------------------------------
+    curve_anticipation_enable: true
+    curve_anticipation_min_distance: 0.90
+    curve_anticipation_speed_gain: 1.50
+    curve_anticipation_max_distance: 2.50
+    curve_anticipation_samples: 20
+    curve_anticipation_curvature_threshold: 0.050
+    curve_anticipation_lateral_acceleration: 0.12
+    curve_anticipation_min_speed: 0.24
+    curve_anticipation_deceleration: 0.65
+    curve_anticipation_safety_distance: 0.25
+
+    # --------------------------------------------------------------------------
+    # Lookahead and local reference preparation
+    # --------------------------------------------------------------------------
+    lookahead_min_distance: 0.30
+    lookahead_max_distance: 0.85
+    lookahead_speed_gain: 0.42
+    direction_filter_margin: 0.08
+    minimum_reference_length: 0.40
+    terminal_heading_lookback_distance: 0.65
+
+    # --------------------------------------------------------------------------
+    # Initial path acquisition speed gate
+    # --------------------------------------------------------------------------
+    path_acquisition_speed_limit_enable: true
+    path_acquisition_enter_lateral_error: 0.080
+    path_acquisition_exit_lateral_error: 0.025
+    path_acquisition_full_lateral_error: 0.350
+    path_acquisition_enter_heading_error: 0.220
+    path_acquisition_exit_heading_error: 0.080
+    path_acquisition_full_heading_error: 0.800
+    path_reacquisition_enter_lateral_error: 0.250
+    path_reacquisition_enter_heading_error: 0.550
+    path_acquisition_min_speed: 0.120
+    path_acquisition_max_speed: 0.550
+    path_acquisition_stable_cycles: 3
+
+    # --------------------------------------------------------------------------
+    # Speed limiting
+    # --------------------------------------------------------------------------
+    curvature_speed_limit_enable: true
+    max_lateral_acceleration: 0.32
+    error_speed_limit_enable: true
+    lateral_error_speed_gain: 0.55
+    heading_error_speed_gain: 0.38
+
+    # Used only to estimate steering demand for speed limiting. The actual steering
+    # command is always produced by the four-state DARE-LQR below.
+    speed_curvature_lateral_error_gain: 0.36
+    speed_curvature_heading_error_gain: 0.66
+
+    # --------------------------------------------------------------------------
+    # Natural terminal slowdown and position-only stop latch.
+    # Tracking, slowdown and stopping all use the same base_link target path.
+    # The supplied topology/global path coordinates are interpreted directly as
+    # desired base_link coordinates. Only the live /lio/odom IMU pose is converted
+    # to base_link with sensor_T_base. The final base_link window is:
+    # distance <= 5 mm, |s| <= 5 mm, |cte| <= 5 mm.
+    # --------------------------------------------------------------------------
+    terminal_stop_on_path_end_enable: true
+    terminal_stop_latch_enable: true
+    terminal_slowdown_enable: true
+    terminal_slowdown_distance: 2.00
+    terminal_stop_distance: 0.01
+    terminal_stop_exit_distance: 0.030
+    terminal_stop_hold_cycles: 3
+    terminal_min_linear_velocity: 0.010
+    terminal_longitudinal_speed_gain: 0.50
+    terminal_stop_s_tolerance: 0.01
+    terminal_stop_lateral_tolerance: 0.01
+
+    terminal_correction_min_velocity: 0.010
+    terminal_correction_speed_max: 0.040
+    terminal_lateral_error_speed_floor_gain: 1.80
+    terminal_distance_error_speed_floor_gain: 0.30
+
+    # Forward terminal motion keeps the original path curvature feedforward and
+    # DARE-LQR feedback without an extra endpoint steering override. This preserves
+    # the terminal path tangent and lets base_link enter the goal naturally.
+
+    reverse_terminal_lateral_convergence_enable: true
+    reverse_terminal_lateral_convergence_start_distance: 1.50
+    reverse_terminal_lateral_convergence_fade_distance: 0.08
+    reverse_terminal_lateral_convergence_deadband: 0.004
+    reverse_terminal_lateral_convergence_gain: 1.35
+    reverse_terminal_lateral_convergence_max_steering: 0.035
+
+    # --------------------------------------------------------------------------
+    # Curvature and command smoothing
+    # --------------------------------------------------------------------------
+    curvature_smoothing_enable: true
+    curvature_smoothing_alpha: 0.55
+    curve_entry_smoothing_alpha: 0.85
+    curve_exit_smoothing_alpha: 0.72
+    curve_entry_rate_multiplier: 1.40
+    max_curvature_rate: 3.00
+    straight_sign_change_smoothing_alpha: 0.30
+    straight_sign_change_rate_multiplier: 0.45
+
+    command_smoothing_enable: true
+    command_smoothing_alpha: 0.65
+    command_deceleration_alpha: 1.00
+
+    # Must match the actual nav_core control timer period.
+    control_period: 0.10
