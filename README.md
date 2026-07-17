@@ -185,12 +185,8 @@ map_T_sensor × sensor_T_base = map_T_base
 
 定义方向符号：
 
-$$
-\sigma=\begin{cases}
-+1,&\text{正向}\
--1,&\text{倒向}
-\end{cases}
-$$
+- 正向行驶：$\sigma=+1$；
+- 倒向行驶：$\sigma=-1$。
 
 局部路径点转换为：
 
@@ -209,7 +205,7 @@ e_y=\mathbf n^T p^*
 $$
 
 $$
-e_\psi=\operatorname{wrap}(\psi_{path}-0)
+e_\psi=\mathrm{wrap}(\psi_{path})
 $$
 
 当前符号约定：
@@ -248,7 +244,7 @@ $$
 
 ### 4.5 路径预处理
 
-1. 运动坐标系中仅保留 $x_m\ge-\texttt{direction_filter_margin}$ 的点；
+1. 运动坐标系中仅保留满足 `x_m >= -direction_filter_margin` 的点；
 2. 过滤后少于 2 点则恢复原路径；
 3. 有效参考长度不足时沿终端切线延长；
 4. 输入路径不足时，以外部目标为中心构造前后切线备用路径；
@@ -269,7 +265,7 @@ $$
 源码使用：
 
 $$
-\phi=\operatorname{sgn}(\delta_{in})\operatorname{atan2}
+\phi=\mathrm{sgn}(\delta_{in})\mathrm{atan2}
 \left(
 L\sin|\delta_{in}|,
 L\cos|\delta_{in}|+W\sin|\delta_{in}|
@@ -279,7 +275,7 @@ $$
 反向换算：
 
 $$
-\delta_{in}=\operatorname{sgn}(\phi)\operatorname{atan2}
+\delta_{in}=\mathrm{sgn}(\phi)\mathrm{atan2}
 \left(
 L\sin|\phi|,
 L\cos|\phi|-W\sin|\phi|
@@ -317,7 +313,7 @@ $$
 源码先将曲率换算为中央转角和内轮转角，再生成：
 
 $$
-\omega_{cmd}=\operatorname{clip}
+\omega_{cmd}=\mathrm{clip}
 \left(
 \frac{2|v|\tan\delta_{in}}{L},
 -\omega_{max},\omega_{max}
@@ -342,7 +338,7 @@ $$
 ### 6.2 短预瞄
 
 $$
-D_{short}=\operatorname{clip}
+D_{short}=\mathrm{clip}
 (D_{min}+k_v|v|,D_{min},D_{max})
 $$
 
@@ -375,7 +371,7 @@ $$
 选择对应延迟 $\tau_+$ 或 $\tau_-$，附加预瞄距离：
 
 $$
-D_{delay}=\operatorname{clip}
+D_{delay}=\mathrm{clip}
 (|v|\tau\lambda_\tau,0,D_{delay,max})
 $$
 
@@ -392,7 +388,7 @@ $$
 由名义前馈计算名义角速度，查表得到执行增益 $g_\omega$。补偿倍率：
 
 $$
-s_{ff}=\operatorname{clip}
+s_{ff}=\mathrm{clip}
 \left[
 1+\lambda_{ff}\left(\frac{1}{g_\omega}-1\right),
 1,s_{ff,max}
@@ -446,7 +442,10 @@ $$
 
 $$
 B=\begin{bmatrix}
-0\\0\\0\\-g_\phi
+0 \\
+0 \\
+0 \\
+-g_\phi
 \end{bmatrix},\qquad
 g_\phi=\frac{2v_m\cos\phi_{ff}}{L}
 $$
@@ -469,7 +468,7 @@ J=\sum_{k=0}^{\infty}
 $$
 
 $$
-Q=\operatorname{diag}(q_y,q_{\dot y},q_\psi,q_{\dot\psi})
+Q=\mathrm{diag}(q_y,q_{\dot y},q_\psi,q_{\dot\psi})
 $$
 
 $$
@@ -479,7 +478,7 @@ $$
 当前默认：
 
 $$
-Q=\operatorname{diag}(12.0,0.30,10.0,0.25),\qquad R=4.2
+Q=\mathrm{diag}(12.0,0.30,10.0,0.25),\qquad R=4.2
 $$
 
 ### 7.4 从 Bellman 方程推导最优控制律
@@ -589,7 +588,7 @@ $$
 $$
 
 $$
-\dot e_{\psi,meas}=\frac{\operatorname{wrap}(e_{\psi,k}^{ctrl}-e_{\psi,k-1}^{ctrl})}{\Delta t}
+\dot e_{\psi,meas}=\frac{\mathrm{wrap}(e_{\psi,k}^{ctrl}-e_{\psi,k-1}^{ctrl})}{\Delta t}
 $$
 
 直线测量融合比例为 `0.12`，曲线为 `0.30`。融合后再使用：
@@ -673,7 +672,7 @@ $$
 速度限幅用曲率估计：
 
 $$
-\kappa_{estimate}=\operatorname{clip}
+\kappa_{estimate}=\mathrm{clip}
 (\kappa_{ff}+k_y e_y+k_\psi e_\psi)
 $$
 
@@ -682,7 +681,7 @@ $$
 ### 10.3 误差限速
 
 $$
-f_e=\operatorname{clip}
+f_e=\mathrm{clip}
 \left(
 \frac{1}{1+k_{v,y}|e_y|+k_{v,\psi}|e_\psi|},
 0.25,1
@@ -698,13 +697,13 @@ $$
 长预瞄距离：
 
 $$
-D_{long}=\operatorname{clip}(D_{min}+k_v|v|,D_{min},D_{max})
+D_{long}=\mathrm{clip}(D_{min}+k_v|v|,D_{min},D_{max})
 $$
 
 找到前方首次弯道入口距离 $d_{entry}$ 和峰值曲率 $\kappa_{peak}$：
 
 $$
-v_{curve}=\operatorname{clip}
+v_{curve}=\mathrm{clip}
 \left(
 \sqrt{\frac{a_{y,preview}}{|\kappa_{peak}|}},
 v_{curve,min},v_{max}
@@ -747,7 +746,7 @@ $$
 
 $$
 e_{\psi,target}^{acq}=k_{acq}
-\arctan2\left(-e_{y,excess},L_{merge}\right)
+\mathrm{atan2}\left(-e_{y,excess},L_{merge}\right)
 $$
 
 $$
@@ -791,7 +790,7 @@ stable_count = 0
 普通倒向直线：
 
 $$
-e_{\psi,target}^{rev}=k_r\arctan2(-e_{y,excess},L_r)
+e_{\psi,target}^{rev}=k_r\mathrm{atan2}(-e_{y,excess},L_r)
 $$
 
 终点附近改用终端切线横向误差，并令：
@@ -849,7 +848,7 @@ $$
 ### 12.7 正倒向终点辅助转角
 
 $$
-\Delta\phi_t=\operatorname{sgn}(e_{t,y})
+\Delta\phi_t=\mathrm{sgn}(e_{t,y})
 \,k_t\max(0,|e_{t,y}|-d_b)
 \,b_{entry}\,b_{fade}
 $$
